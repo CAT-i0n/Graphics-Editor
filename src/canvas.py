@@ -1,6 +1,6 @@
 import tkinter as tk
 from time import sleep
-from .shapes import DDA, BresenhamLine, WuLine
+from .shapes import DDA, BresenhamLine, WuLine, Circle, Ellipse, Hyperbola, Parabola
 
 
 class Canvas(tk.Canvas):
@@ -13,7 +13,11 @@ class Canvas(tk.Canvas):
 
         self._mods = {'DDA': DDA,
                      'Bresenham': BresenhamLine,
-                     'Wu': WuLine}
+                     'Wu': WuLine, 
+                     'Circle' : Circle,
+                     'Ellipse' : Ellipse,
+                     'Hyperbola' : Hyperbola,
+                     'Parabola' : Parabola}
 
         self._isDraw: bool = False
         self.draw_mode = 'DDA'
@@ -23,12 +27,12 @@ class Canvas(tk.Canvas):
         if self._isDraw:
             x, y = event.x, event.y
             if len(self._positions) > 1:
-                self._shapes.append(self.__draw_line(*self._positions[-1], x, y))
+                self._shapes.append(self.__draw_figure(*self._positions[-1], x, y))
             self._isDraw = False
         else:
             x, y = event.x, event.y
             self._positions.append((x, y))
-            self._shapes.append(self.__draw_line(x, y, x, y))
+            self._shapes.append(self.__draw_figure(x, y, x, y))
             self._isDraw = True
 
     def __motion(self, event):
@@ -40,10 +44,10 @@ class Canvas(tk.Canvas):
                 pass
             if len(self._positions) > 0:
                 # self.canvas.create_line(*self._positions[-1], event.x, event.y)
-                self._shapes.append(self.__draw_line(
+                self._shapes.append(self.__draw_figure(
                     *self._positions[-1], event.x, event.y))
 
-    def __draw_line(self, *args):
+    def __draw_figure(self, *args):
         points = []
         for i in self._mods[self.draw_mode]().draw(*args):
             if self.debug_mode:
@@ -61,3 +65,10 @@ class Canvas(tk.Canvas):
             for i in self._shapes[-1]:
                 self.delete(i)
             self._shapes = self._shapes[:-1]
+
+    def clear(self):
+        for i in self._shapes:
+            for j in i:
+                self.delete(j)
+        self._shapes = []
+        self._isDraw: bool = False
