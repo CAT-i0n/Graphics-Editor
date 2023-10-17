@@ -1,6 +1,6 @@
 import tkinter as tk
 from time import sleep
-from shapes import DDA, BresenhamLine, WuLine
+from .shapes import DDA, BresenhamLine, WuLine
 
 
 class Canvas(tk.Canvas):
