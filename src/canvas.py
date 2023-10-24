@@ -1,8 +1,12 @@
 import tkinter as tk
 from time import sleep
-from .shapes import DDA, BresenhamLine, WuLine, Circle, Ellipse, Hyperbola, Parabola
-
-
+from .shapes import (DDA,
+                     BresenhamLine, 
+                     WuLine, 
+                     Circle, 
+                     Ellipse, 
+                     Hyperbola, 
+                     Parabola)
 class Canvas(tk.Canvas):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -12,12 +16,12 @@ class Canvas(tk.Canvas):
         self._shapes = []
 
         self._mods = {'DDA': DDA,
-                     'Bresenham': BresenhamLine,
-                     'Wu': WuLine, 
-                     'Circle' : Circle,
-                     'Ellipse' : Ellipse,
-                     'Hyperbola' : Hyperbola,
-                     'Parabola' : Parabola}
+                      'Bresenham': BresenhamLine,
+                      'Wu': WuLine,
+                      'Circle': Circle,
+                      'Ellipse': Ellipse,
+                      'Hyperbola': Hyperbola,
+                      'Parabola': Parabola}
 
         self._isDraw: bool = False
         self.draw_mode = 'DDA'
@@ -27,7 +31,8 @@ class Canvas(tk.Canvas):
         if self._isDraw:
             x, y = event.x, event.y
             if len(self._positions) > 1:
-                self._shapes.append(self.__draw_figure(*self._positions[-1], x, y))
+                self._shapes.append(self.__draw_figure(
+                    *self._positions[-1], x, y))
             self._isDraw = False
         else:
             x, y = event.x, event.y

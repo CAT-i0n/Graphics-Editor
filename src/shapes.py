@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from math import inf
 
 class Shape(ABC):
     points = []
@@ -120,9 +121,8 @@ class Hyperbola(Shape):
             points.append((plot_x - x, plot_y + y))
             points.append((plot_x - x, plot_y - y))
             if delta>0:
-                dd = abs(b**2*(x+1)**2-a**2*(y+1)**2 - r) 
-                dv = abs(b**2*(x)**2-a**2*(y+1)**2 - r) 
-                if dd>dv:
+                d = b**2*(1+2*x)
+                if d>0:
                     y+=1
                     delta -= a**2*(1+2*y)
                 else:
@@ -131,9 +131,8 @@ class Hyperbola(Shape):
                     delta +=  b**2*(1+2*x) - a**2*(1+2*y)
                 continue
             if delta<0:
-                dd = abs(b**2*(x+1)**2-a**2*(y-1)**2 - r) 
-                dh = abs(b**2*(x+1)**2-a**2*(y)**2 - r) 
-                if dd>dh:
+                d = -a**2*(1+2*y)
+                if d>0:
                     x+=1
                     delta += b**2*(1+2*x)
                 else:
@@ -153,16 +152,18 @@ class Parabola(Shape):
         points = []        
         a = abs(x1-x)
         b = abs(y-y1)
+
+        
         if a == 0 or b == 0:
             return []
         p = 2*a
 
         plot_x = x
         plot_y = y
-        x = 0.1
+        x = 0
         y = 0
 
-        delta = 0
+        delta = - 2 * p + 1
 
         size_x = 850
         size_y = 700
@@ -171,31 +172,29 @@ class Parabola(Shape):
             points.append((plot_x + x, plot_y + y))
             points.append((plot_x + x, plot_y - y)) 
             if delta<0:
-                dd = abs((y+1)**2/(x+1) - r) 
-                dv = abs((y+1)**2/(x) - r) 
-                if dd>dv:
+                d = 2*p
+                if d>0:
                     y+=1
-                    delta = y**2/x -2*p
+                    delta += 2*y+1
                 else:
                     x+=1
                     y+=1
-                    delta = y**2/x-2*p
+                    delta += 2*y+1 - 2*p
                 continue
             if delta>0:
-                dd = abs((y+1)**2/(x+1) - r) 
-                dh = abs((y)**2/(x+1) - r) 
-                if dd>dh:
+                d = 2*y+1
+                if d>0:
                     x+=1
-                    delta = y**2/x-2*p
+                    delta -= 2*p
                 else:
                     x+=1
                     y+=1
-                    delta = y**2/x-2*p
+                    delta += 2*y+1 - 2*p
                 continue
             if delta==0:
                 x+=1
                 y+=1
-                delta = y**2/x-2*p
+                delta += 2*y+1 - 2*p
         return points
 
 class DDA():
@@ -205,13 +204,13 @@ class DDA():
             return [(x1, y1)]
         points = []
 
-        lenght = max(abs(x1-x2), abs(y1-y2))
-        dx = (x2-x1)/lenght
-        dy = (y2-y1)/lenght
+        length = max(abs(x1-x2), abs(y1-y2))
+        dx = (x2-x1)/length
+        dy = (y2-y1)/length
         x = x1
         y = y1
         i = 0
-        while i < lenght:
+        while i < length:
             x += dx
             y += dy
             points.append((x, y))
@@ -220,7 +219,6 @@ class DDA():
     
 
 class BresenhamLine():
-
     def draw(self, x1=0, y1=0, x2=0, y2=0):
             if x1-x2 == 0 and y1-y2 == 0:
                 return [(x1, y1)]

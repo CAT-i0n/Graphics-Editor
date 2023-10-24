@@ -1,5 +1,6 @@
 import tkinter as tk
 import numpy as np
+from itertools import cycle
 
 from .canvas import Canvas
 
@@ -9,10 +10,9 @@ class App(tk.Tk):
         self.attributes('-type', 'splash')
         self.title('Editor')
         self.geometry('1000x700')
-        self.line_mods = ['DDA', 'Bresenham', 'Wu']
-        self.line_mode_number = 0
+        self.line_mods = cycle(['DDA', 'Bresenham', 'Wu'])
+        self.quadrtic_curves_mods = cycle(['Circle', 'Ellipse', 'Hyperbola', 'Parabola'])
         self.__build()
-        self.__run()
         
     def __build(self):
         tools_frame = tk.Frame(master = self, height=700, width = 150, relief=tk.RIDGE)
@@ -23,27 +23,17 @@ class App(tk.Tk):
         self._canvas = Canvas(master = canvas_frame, height=700, width=850,  bg='black')
         self._canvas.pack()
 
-        self._line_button = tk.Button(master = tools_frame, text="Line:\nDDA", height=2, width=10, command=self.__change_line_draw_mode)
-        self._line_button.place(x=20,y=20)
+        self._line_button = tk.Button(master = tools_frame, text="Line:\nDDA", height=2, width=12, command=self.__change_line_draw_mode)
+        self._line_button.place(x=15,y=20)
 
-        circle_button = tk.Button(master = tools_frame, text="Circle", height=2, width=10, command=lambda: self.__change_draw_mode('Circle'))
-        circle_button.place(x=20,y=70)
-
-        ellipse_button = tk.Button(master = tools_frame, text="Ellipse", height=2, width=10, command=lambda: self.__change_draw_mode('Ellipse'))
-        ellipse_button.place(x=20,y=120)
-
-        hyperbola_button = tk.Button(master = tools_frame, text="Hyperbola", height=2, width=10, command=lambda: self.__change_draw_mode('Hyperbola'))
-        hyperbola_button.place(x=20,y=170)
-
-        parabola_button = tk.Button(master = tools_frame, text="Parabola", height=2, width=10, command=lambda: self.__change_draw_mode('Parabola'))
-        parabola_button.place(x=20,y=220)
+        self._quadratic_curve_button = tk.Button(master = tools_frame, text="Quadratic Curve:\nCircle", height=2, width=12, command=self.__change_quadrtic_curve_draw_mode)
+        self._quadratic_curve_button.place(x=15,y=70)
         
-        
-        self._mode_button = tk.Button(master = tools_frame, text="mode:\ndefault", height=2, width=10, command=self.__change_mode)
-        self._mode_button.place(x=20,y=500)
+        self._mode_button = tk.Button(master = tools_frame, text="mode:\ndefault", height=2, width=12, command=self.__change_mode)
+        self._mode_button.place(x=15,y=500)
 
-        clear_button = tk.Button(master = tools_frame, text="Clear", height=2, width=10, command=self._canvas.clear)
-        clear_button.place(x=20,y=550)
+        clear_button = tk.Button(master = tools_frame, text="Clear", height=2, width=12, command=self._canvas.clear)
+        clear_button.place(x=15,y=550)
 
         
 
@@ -52,9 +42,12 @@ class App(tk.Tk):
         
 
     def __change_line_draw_mode(self):
-        self.line_mode_number = (self.line_mode_number+1)%3
-        self._canvas.draw_mode = self.line_mods[self.line_mode_number]
-        self._line_button['text'] = 'Line:\n'+ self.line_mods[self.line_mode_number]
+        self._canvas.draw_mode = next(self.line_mods)
+        self._line_button['text'] = 'Line:\n'+ self._canvas.draw_mode
+
+    def __change_quadrtic_curve_draw_mode(self):
+        self._canvas.draw_mode = next(self.quadrtic_curves_mods)
+        self._quadratic_curve_button['text'] = 'Quadratic Curve:\n'+ self._canvas.draw_mode
 
     def __change_draw_mode(self, mode):
         self._canvas.draw_mode = mode
@@ -64,5 +57,5 @@ class App(tk.Tk):
         self._mode_button['text'] = 'mode:\ndebug' if self._canvas.debug_mode else 'mode:\ndefault'
     
 
-    def __run(self):
+    def run(self):
         self.mainloop()
