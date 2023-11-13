@@ -15,14 +15,13 @@ class App(tk.Tk):
         self.quadrtic_curves_mods = cycle(
             ['Circle', 'Ellipse', 'Hyperbola', 'Parabola'])
         self.curve_aproximation_mods = cycle(['Hermite', 'Bеzier', 'Splain'])
+        self.mods = cycle(['draw', 'debug', 'edit'])
         self.__build()
 
     def __build(self):
         tools_frame = tk.Frame(master=self, height=700,
                                width=150, relief=tk.RIDGE)
         tools_frame.pack(side=tk.LEFT)
-
-        
 
         canvas_frame = tk.Frame(
             master=self, borderwidth=1, height=700, width=850, relief=tk.RIDGE)
@@ -71,15 +70,14 @@ class App(tk.Tk):
             self._canvas.shape_draw_mode
         self._canvas.change_draw_mode()
 
-    def __change_draw_mode(self, mode):
-        self._canvas.shape_draw_mode = mode
-
     def __change_mode(self):
-        self._canvas.debug_mode = not self._canvas.debug_mode
-        self._mode_button['text'] = 'mode:\ndebug' if self._canvas.debug_mode else 'mode:\ndefault'
+        self._canvas.mode = next(self.mods)
+        self._mode_button['text'] = 'mode:\n' + self._canvas.mode
+        self._canvas.change_mode()
 
     def run(self):
         next(self.quadrtic_curves_mods)
         next(self.line_mods)
         next(self.curve_aproximation_mods)
+        next(self.mods)
         self.mainloop()

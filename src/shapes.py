@@ -3,7 +3,8 @@ from math import inf
 import numpy as np 
 from itertools import cycle
 class Shape(ABC):
-    points = []
+    def __init__(self):
+        pass
 
     @abstractmethod
     def draw(self, *args, **kwargs):
@@ -11,7 +12,7 @@ class Shape(ABC):
 
 
 class Circle(Shape):
-    ...
+    
 
     def draw(self, x, y, x1, y1):
         points = []
@@ -381,8 +382,7 @@ class Bеzier(Shape, Interpolation):
     
 class Splain(Shape, Interpolation):
     def draw(self, *args):
-        
-
+ 
         max_x = max(list(zip(*args))[0])
         max_y = max(list(zip(*args))[1])
 
