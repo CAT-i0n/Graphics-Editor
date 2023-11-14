@@ -4,7 +4,7 @@ from itertools import cycle
 
 from .canvas import Canvas
 
-
+from .modes import CanvasModes
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -14,8 +14,8 @@ class App(tk.Tk):
         self.line_mods = cycle(['DDA', 'Bresenham', 'Wu'])
         self.quadrtic_curves_mods = cycle(
             ['Circle', 'Ellipse', 'Hyperbola', 'Parabola'])
-        self.curve_aproximation_mods = cycle(['Hermite', 'Bеzier', 'Splain'])
-        self.mods = cycle(['draw', 'debug', 'edit'])
+        self.curve_aproximation_mods = cycle(['Hermite', 'Bеzier', 'Splain', 'Closed splain'])
+        self.mods = cycle([CanvasModes.DRAW, CanvasModes.DEBUG, CanvasModes.EDIT])
         self.__build()
 
     def __build(self):
@@ -72,7 +72,7 @@ class App(tk.Tk):
 
     def __change_mode(self):
         self._canvas.mode = next(self.mods)
-        self._mode_button['text'] = 'mode:\n' + self._canvas.mode
+        self._mode_button['text'] = 'mode:\n' + self._canvas.mode.value
         self._canvas.change_mode()
 
     def run(self):
