@@ -28,6 +28,7 @@ class App(tk.Tk):
         canvas_frame.pack(side=tk.RIGHT)
         self._canvas = Canvas(master=canvas_frame,
                               height=700, width=850,  bg='black')
+        self._canvas.main_parent = self
         self._canvas.pack()
 
         self._line_button = tk.Button(

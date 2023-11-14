@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 from math import inf
-import numpy as np 
+import numpy as np
 from itertools import cycle
+from .point import Point
+
 class Shape(ABC):
-    def __init__(self):
-        pass
 
     @abstractmethod
     def draw(self, *args, **kwargs):
@@ -12,9 +12,11 @@ class Shape(ABC):
 
 
 class Circle(Shape):
-    
+    def __init__(self, *args):
+        self.points = args
 
-    def draw(self, x, y, x1, y1):
+    def draw(self):
+        x, y, x1, y1 = self.points
         points = []
         r = ((x-x1)**2+(y-y1)**2)**0.5
 
@@ -25,10 +27,10 @@ class Circle(Shape):
         y = r
 
         while y > 0:
-            points.append((plot_x + x, plot_y + y))
-            points.append((plot_x + x, plot_y - y))
-            points.append((plot_x - x, plot_y + y))
-            points.append((plot_x - x, plot_y - y))
+            points.append(Point(plot_x + x, plot_y + y))
+            points.append(Point(plot_x + x, plot_y - y))
+            points.append(Point(plot_x - x, plot_y + y))
+            points.append(Point(plot_x - x, plot_y - y))
             if delta > 0:
                 dd = abs((x+1)**2+(y-1)**2 - r**2)
                 dv = abs((x)**2+(y-1)**2 - r**2)
@@ -59,7 +61,11 @@ class Circle(Shape):
 
 
 class Ellipse(Shape):
-    def draw(self, x, y, x1, y1):
+    def __init__(self, *args):
+        self.points = args
+
+    def draw(self):
+        x, y, x1, y1 = self.points
         points = []
         a = abs(x-x1)
         b = abs(y-y1)
@@ -71,10 +77,10 @@ class Ellipse(Shape):
         y = b
 
         while y > 0:
-            points.append((plot_x + x, plot_y + y))
-            points.append((plot_x + x, plot_y - y))
-            points.append((plot_x - x, plot_y + y))
-            points.append((plot_x - x, plot_y - y))
+            points.append(Point(plot_x + x, plot_y + y))
+            points.append(Point(plot_x + x, plot_y - y))
+            points.append(Point(plot_x - x, plot_y + y))
+            points.append(Point(plot_x - x, plot_y - y))
             r = b**2*a**2
             if delta > 0:
                 dd = abs(b**2*(x+1)**2+a**2*(y-1)**2 - r)
@@ -106,7 +112,11 @@ class Ellipse(Shape):
 
 
 class Hyperbola(Shape):
-    def draw(self, x, y, x1, y1):
+    def __init__(self, *args):
+        self.points = args
+
+    def draw(self):
+        x, y, x1, y1 = self.points
         points = []
         a = abs(x-x1)
         b = abs(y-y1)
@@ -122,10 +132,10 @@ class Hyperbola(Shape):
         size_y = 700
         r = b**2*a**2
         while (0 < plot_x + x < size_x or 0 < plot_x - x < size_x) and (0 < plot_y + y < size_y or 0 < plot_y - y < size_y):
-            points.append((plot_x + x, plot_y + y))
-            points.append((plot_x + x, plot_y - y))
-            points.append((plot_x - x, plot_y + y))
-            points.append((plot_x - x, plot_y - y))
+            points.append(Point(plot_x + x, plot_y + y))
+            points.append(Point(plot_x + x, plot_y - y))
+            points.append(Point(plot_x - x, plot_y + y))
+            points.append(Point(plot_x - x, plot_y - y))
             if delta > 0:
                 d = b**2*(1+2*x)
                 if d > 0:
@@ -154,8 +164,11 @@ class Hyperbola(Shape):
 
 
 class Parabola(Shape):
-    def draw(self, x, y, x1, y1):
+    def __init__(self, *args):
+        self.points = args
 
+    def draw(self):
+        x, y, x1, y1 = self.points
         points = []
         a = abs(x1-x)
         b = abs(y-y1)
@@ -175,8 +188,8 @@ class Parabola(Shape):
         size_y = 700
         r = 2*p
         while (0 < plot_x + x < size_x or 0 < plot_x - x < size_x) and (0 < plot_y + y < size_y or 0 < plot_y - y < size_y):
-            points.append((plot_x + x, plot_y + y))
-            points.append((plot_x + x, plot_y - y))
+            points.append(Point(plot_x + x, plot_y + y))
+            points.append(Point(plot_x + x, plot_y - y))
             if delta < 0:
                 d = 2*p
                 if d > 0:
@@ -205,10 +218,13 @@ class Parabola(Shape):
 
 
 class DDA():
+    def __init__(self, *args):
+        self.points = args
 
-    def draw(self, x1, y1, x2, y2):
+    def draw(self):
+        x1, y1, x2, y2 = self.points
         if x1-x2 == 0 and y1-y2 == 0:
-            return [(x1, y1)]
+            return [Point(x1, y1)]
         points = []
 
         length = max(abs(x1-x2), abs(y1-y2))
@@ -220,15 +236,19 @@ class DDA():
         while i < length:
             x += dx
             y += dy
-            points.append((x, y))
+            points.append(Point(x, y))
             i += 1
         return points
 
 
 class BresenhamLine():
-    def draw(self, x1=0, y1=0, x2=0, y2=0):
+    def __init__(self, *args):
+        self.points = args
+
+    def draw(self):
+        x1, y1, x2, y2 = self.points
         if x1-x2 == 0 and y1-y2 == 0:
-            return [(x1, y1)]
+            return [Point(x1, y1)]
         points = []
 
         steep = abs(y2 - y1) > abs(x2 - x1)
@@ -255,18 +275,21 @@ class BresenhamLine():
             e += 2*dy
             i += 1
             if steep:
-                points.append((y, x))
+                points.append(Point(y, x))
             else:
-                points.append((x, y))
+                points.append(Point(x, y))
 
         return points
 
 
 class WuLine():
+    def __init__(self, *args):
+        self.points = args
 
-    def draw(self, x1, y1, x2, y2):
+    def draw(self):
+        x1, y1, x2, y2 = self.points
         if x1-x2 == 0 and y1-y2 == 0:
-            return [(x1, y1)]
+            return [Point(x1, y1)]
 
         steep = abs(y2 - y1) > abs(x2 - x1)
 
@@ -281,53 +304,57 @@ class WuLine():
         points = []
 
         if steep:
-            points.append((y1, x1, 1))
+            points.append(Point(y1, x1, 0, 1))
         else:
-            points.append((x2, y2, 1))
+            points.append(Point(x2, y2, 0, 1))
         dx = x2 - x1
         dy = y2 - y1
         gradient = dy / dx
         y = y1 + gradient
         for x in range(x1+1, x2):
             if steep:
-                points.append((int(y), x, 1 - (y - int(y))))
-                points.append((int(y) + 1, x, y - int(y)))
+                points.append(Point(int(y), x, 0, 1 - (y - int(y))))
+                points.append(Point(int(y) + 1, x, 0, y - int(y)))
             else:
-                points.append((x, int(y), 1 - (y - int(y))))
-                points.append((x, int(y) + 1, y - (int(y))))
+                points.append(Point(x, int(y), 0, 1 - (y - int(y))))
+                points.append(Point(x, int(y) + 1, 0, y - (int(y))))
 
             y += gradient
         return points
 
+
 class Interpolation:
     ...
 
-class Hermite(Shape, Interpolation):
-    def draw(self, *args):
-        
 
-        max_x = max(list(zip(*args))[0])
-        max_y = max(list(zip(*args))[1])
+class Hermite(Shape, Interpolation):
+    def __init__(self, *args):
+        self.points = args
+
+    def draw(self):
+
+        max_x = max(list(zip(*self.points))[0])
+        max_y = max(list(zip(*self.points))[1])
 
         max_p = max(max_x, max_y)
 
         normalized = []
 
-        for i,j in enumerate(args):
+        for i, j in enumerate(self.points):
             normalized.append((j[0]/max_p, j[1]/max_p))
 
         p1, p2, p3, p4 = normalized
-        
+
         tx = [2*p1[0]-2*p2[0]+p3[0]+p4[0],
               -3*p1[0]+3*p2[0]-2*p3[0]-p4[0],
               p3[0],
               p1[0]]
-        
+
         ty = [2*p1[1]-2*p2[1]+p3[1]+p4[1],
               -3*p1[1]+3*p2[1]-2*p3[1]-p4[1],
               p3[1],
               p1[1]]
-        
+
         points = []
 
         for i in np.arange(0, 1, 0.001):
@@ -335,38 +362,41 @@ class Hermite(Shape, Interpolation):
             y = 0
             for j in range(4):
                 p = -1*j+3
-                x+=i**p*tx[j]*max_p
-                y+=i**p*ty[j]*max_p
-            points.append((x,y))
-            
-        return points
-    
-class Bеzier(Shape, Interpolation):
-    def draw(self, *args):
-        
+                x += i**p*tx[j]*max_p
+                y += i**p*ty[j]*max_p
+            points.append(Point(x, y))
 
-        max_x = max(list(zip(*args))[0])
-        max_y = max(list(zip(*args))[1])
+        return points
+
+
+class Bеzier(Shape, Interpolation):
+    def __init__(self, *args):
+        self.points = args
+
+    def draw(self):
+
+        max_x = max(list(zip(*self.points))[0])
+        max_y = max(list(zip(*self.points))[1])
 
         max_p = max(max_x, max_y)
 
         normalized = []
 
-        for i,j in enumerate(args):
+        for i, j in enumerate(self.points):
             normalized.append((j[0]/max_p, j[1]/max_p))
 
         p1, p2, p3, p4 = normalized
-        
+
         tx = [-1*p1[0]+3*p2[0]-3*p3[0]+p4[0],
               3*p1[0]-6*p2[0]+3*p3[0],
               -3*p1[0]+3*p2[0],
               p1[0]]
-        
+
         ty = [-1*p1[1]+3*p2[1]-3*p3[1]+p4[1],
               3*p1[1]-6*p2[1]+3*p3[1],
               -3*p1[1]+3*p2[1],
               p1[1]]
-        
+
         points = []
 
         for i in np.arange(0, 1, 0.001):
@@ -374,48 +404,96 @@ class Bеzier(Shape, Interpolation):
             y = 0
             for j in range(4):
                 p = -1*j+3
-                x+=i**p*tx[j]*max_p
-                y+=i**p*ty[j]*max_p
-            points.append((x,y))
-            
+                x += i**p*tx[j]*max_p
+                y += i**p*ty[j]*max_p
+            points.append(Point(x, y))
+
         return points
-    
-class Splain(Shape, Interpolation):
+
+
+class ClosedSplain(Shape, Interpolation):
+    def __init__(self, *args):
+        self.points = args
+
     def draw(self, *args):
- 
-        max_x = max(list(zip(*args))[0])
-        max_y = max(list(zip(*args))[1])
+
+        max_x = max(list(zip(*self.points))[0])
+        max_y = max(list(zip(*self.points))[1])
 
         max_p = max(max_x, max_y)
 
         normalized = []
 
-        for i,j in enumerate(args):
+        for i, j in enumerate(self.points):
             normalized.append((j[0]/max_p, j[1]/max_p))
 
         size = len(normalized)
         points = []
         for k in range(size):
-            p1, p2, p3, p4 = normalized[k%size], normalized[(k+1)%size], normalized[(k+2)%size], normalized[(k+3)%size]
-            
+            p1, p2, p3, p4 = normalized[k % size], normalized[(
+                k+1) % size], normalized[(k+2) % size], normalized[(k+3) % size]
+
             tx = [-1*p1[0]+3*p2[0]-3*p3[0]+p4[0],
-                3*p1[0]-6*p2[0]+3*p3[0],
-                -3*p1[0]+3*p3[0],
-                p1[0]+4*p2[0]+p3[0]]
-            
+                  3*p1[0]-6*p2[0]+3*p3[0],
+                  -3*p1[0]+3*p3[0],
+                  p1[0]+4*p2[0]+p3[0]]
+
             ty = [-1*p1[1]+3*p2[1]-3*p3[1]+p4[1],
-                3*p1[1]-6*p2[1]+3*p3[1],
-                -3*p1[1]+3*p3[1],
-                p1[1]+4*p2[1]+p3[1]]
-        
+                  3*p1[1]-6*p2[1]+3*p3[1],
+                  -3*p1[1]+3*p3[1],
+                  p1[1]+4*p2[1]+p3[1]]
+
             for i in np.arange(0, 1, 0.001):
                 x = 0
                 y = 0
                 for j in range(4):
                     p = -1*j+3
-                    x+=i**p*tx[j]*max_p/6
-                    y+=i**p*ty[j]*max_p/6
-                points.append((x,y))
-                
+                    x += i**p*tx[j]*max_p/6
+                    y += i**p*ty[j]*max_p/6
+                points.append(Point(x, y))
+
         return points
-    
+
+
+class Splain(Shape, Interpolation):
+    def __init__(self, *args):
+        self.points = args
+
+    def draw(self, *args):
+
+        max_x = max(list(zip(*self.points))[0])
+        max_y = max(list(zip(*self.points))[1])
+
+        max_p = max(max_x, max_y)
+
+        normalized = []
+
+        for i, j in enumerate(self.points):
+            normalized.append((j[0]/max_p, j[1]/max_p))
+
+        size = len(normalized)
+        points = []
+        for k in range(size-1):
+            p1, p2, p3, p4 = normalized[k % size], normalized[(
+                k+1) % size], normalized[(k+2) % size], normalized[(k+3) % size]
+
+            tx = [-1*p1[0]+3*p2[0]-3*p3[0]+p4[0],
+                  3*p1[0]-6*p2[0]+3*p3[0],
+                  -3*p1[0]+3*p3[0],
+                  p1[0]+4*p2[0]+p3[0]]
+
+            ty = [-1*p1[1]+3*p2[1]-3*p3[1]+p4[1],
+                  3*p1[1]-6*p2[1]+3*p3[1],
+                  -3*p1[1]+3*p3[1],
+                  p1[1]+4*p2[1]+p3[1]]
+
+            for i in np.arange(0, 1, 0.001):
+                x = 0
+                y = 0
+                for j in range(4):
+                    p = -1*j+3
+                    x += i**p*tx[j]*max_p/6
+                    y += i**p*ty[j]*max_p/6
+                points.append(Point(x, y))
+
+        return points

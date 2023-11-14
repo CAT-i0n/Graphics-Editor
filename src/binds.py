@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from .modes import CanvasModes
-
+import numpy as np
+from math import cos, sin, pi
 class Binds:
     def __init__(self, canvas):
         pass
@@ -27,23 +28,23 @@ class TwoAnchorBinds(Binds):
     def position(self, event):
         if len(self.canvas.positions) == 1:
             x, y = event.x, event.y
-            self.canvas.shapes.append(self.canvas.draw_figure(
-                *self.canvas.positions[-1], x, y))
+            self.canvas.draw_figure(
+                *self.canvas.positions[-1], x, y)
             if self.canvas.mode == CanvasModes.DEBUG:
                 return
             self.canvas.positions = []
         else:
             x, y = event.x, event.y
             self.canvas.positions.append((x, y))
-            self.canvas.shapes.append(self.canvas.draw_figure(x, y, x, y))
+            self.canvas.draw_figure(x, y, x, y)
 
     def motion(self, event):
         if self.canvas.mode == CanvasModes.DEBUG:
             return
         if len(self.canvas.positions) == 1:
             self.canvas.delete_last_line()
-            self.canvas.shapes.append(self.canvas.draw_figure(
-                *self.canvas.positions[-1], event.x, event.y))
+            self.canvas.draw_figure(
+                *self.canvas.positions[-1], event.x, event.y)
 
 
 class InterpolationBinds(Binds):
@@ -71,7 +72,7 @@ class InterpolationBinds(Binds):
                 x = (rect[0] + rect[2])//2
                 y = (rect[1] + rect[3])//2
                 points.append((x, y))
-            self.canvas.shapes.append(self.canvas.draw_figure(*points))
+            self.canvas.draw_figure(*points)
             for i in self.canvas.buttons:
                 self.canvas.delete(i)
             self.canvas.buttons = []
@@ -91,10 +92,31 @@ class InterpolationBinds(Binds):
                 y = (rect[1] + rect[3])//2
                 points.append((x, y))
             self.canvas.delete_last_line()
-            self.canvas.shapes.append(self.canvas.draw_figure(*points))
+            self.canvas.draw_figure(*points)
 
     def approve(self, event):
         self.canvas.approve = True
         self.position(event)
         self.canvas.approve = False
 
+class EditBinds(Binds):
+    def __init__(self, canvas):
+        self.canvas = canvas
+
+    def position(self, event):
+        pass
+
+    def motion(self, event):
+        pass
+
+    def approve(self, event):
+        pass
+
+    def up(self, event):
+        f = 1/2/pi
+        matrix = np.array([[cos(f), -sin(f), 0],
+                           [sin(f), cos(f),  0],
+                           [0,      0,       1]])
+        for s_index, shape in enumerate(self.canvas.shapes):
+            for p_index, point in enumerate(shape.points):
+                print(self.canvas.gettags(point))

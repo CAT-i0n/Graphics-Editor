@@ -6,11 +6,11 @@ from .shapes import (DDA, BresenhamLine, WuLine,
                      Hermite, Bеzier, Splain, ClosedSplain, Interpolation)
 
 from .modes import CanvasModes
-from .binds import TwoAnchorBinds, InterpolationBinds
+from .binds import TwoAnchorBinds, InterpolationBinds, EditBinds
 
 
 class Canvas(tk.Canvas):
-    num = 0
+    id = 0
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -67,23 +67,21 @@ class Canvas(tk.Canvas):
             self.unbind('<Motion>')
             self.unbind('<Button-2>')
 
-            self._position = self.__edit_position
-            self._motion = self.__edit_motion
-            self._approval = self.__edit_approve
+            self._binds = EditBinds(self)
+            print(1)
+            self.main_parent.bind('w', self._binds.up)
+            print(1)
 
-            self.bind('<Button-1>', self._position)
-            self.bind('<Motion>', self._motion)
-            self.bind('<Button-3>', self._approval)
 
     def add_button(self, event):
         x, y = event.x, event.y
         self.positions.append((x, y))
-        self.num += 1
+        self.id += 1
         canvas_button = self.create_rectangle(
-            x, y, x+15, y+15, fill="gray", tags="rect"+str(self.num))
+            x, y, x+15, y+15, fill="gray", tags="rect"+str(self.id))
 
-        self.tag_bind("rect"+str(self.num), "<Button-1>",
-                      lambda _: self.button_clicked(self.num))
+        self.tag_bind("rect"+str(self.id), "<Button-1>",
+                      lambda _: self.button_clicked(self.id))
         self.buttons.append(canvas_button)
 
     def button_clicked(self, num: int):
@@ -96,23 +94,30 @@ class Canvas(tk.Canvas):
             if self.mode == CanvasModes.DEBUG:
                 sleep(0.005)
                 self.update()
-            points.append(self.__draw_point(*i))
+            point = self.__draw_point(i)
+            points.append(point)
         shape.points = points
-        return points
+        self.shapes.append(shape)
 
-    def __draw_point(self, x, y, z=0, alpha=1):
+    def __draw_point(self, point):
+        x, y, alpha = point.get_draw()
+        self.id+=1
         color = hex(int(255*(alpha)))[2:]*3
-        return self.create_line(x, y, x+1, y, fill=f'#{color}')
+        tag = "point" + str(self.id)
+        index = self.create_line(x, y, x+1, y, fill=f'#{color}', tags=tag)
+        point.set_id(index)
+        point.set_tag(tag)
+        return point
 
     def delete_last_line(self):
         if len(self.shapes) > 0:
-            for i in self.shapes[-1]:
-                self.delete(i)
+            for i in self.shapes[-1].points:
+                self.delete(i.get_id())
             self.shapes = self.shapes[:-1]
 
     def clear(self):
         for i in self.shapes:
-            for j in i:
-                self.delete(j)
+            for j in i.points:
+                self.delete(j.get_id())
         self.shapes = []
         self.isDraw: bool = False
