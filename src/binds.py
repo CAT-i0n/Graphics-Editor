@@ -2,24 +2,28 @@ from abc import ABC, abstractmethod
 from .modes import CanvasModes
 import numpy as np
 from math import cos, sin, pi
+from time import time
+from .point import Point
+
 class Binds:
     def __init__(self, canvas):
         pass
 
-    #ЛКМ
+    # ЛКМ
     @abstractmethod
     def position(self, event):
         pass
-    
-    #Движение мышки
+
+    # Движение мышки
     @abstractmethod
     def motion(self, event):
         pass
-    
-    #ПКМ
+
+    # ПКМ
     @abstractmethod
     def approve(self, event):
         pass
+
 
 class TwoAnchorBinds(Binds):
     def __init__(self, canvas):
@@ -99,9 +103,74 @@ class InterpolationBinds(Binds):
         self.position(event)
         self.canvas.approve = False
 
+
 class EditBinds(Binds):
     def __init__(self, canvas):
         self.canvas = canvas
+        f = 1/2/pi
+        self.scale_up_matrix = np.array([[1.1, 0,  0,   0],
+                                         [0, 1.1,  0,   0],
+                                         [0,   0, 1.1,  0],
+                                         [0,   0,   0,  1]])
+        
+        self.scale_down_matrix = np.array([[0.9, 0,   0, 0],
+                                           [0, 0.9,   0, 0],
+                                           [0,   0, 0.9, 0], 
+                                           [0,   0,   0, 1]])
+        
+        self.up_matrix = np.array([[1, 0, 0,  0],
+                                   [0, 1, 0, -5],
+                                   [0, 0, 1,  0], 
+                                   [0, 0, 0,  1]])
+        
+        self.down_matrix = np.array([[1, 0, 0, 0],
+                                     [0, 1, 0, 5],
+                                     [0, 0, 1, 0], 
+                                     [0, 0, 0, 1]])
+
+        self.left_matrix = np.array([[1, 0, 0, -5],
+                                     [0, 1, 0,  0],
+                                     [0, 0, 1,  0], 
+                                     [0, 0, 0,  1]])
+
+        self.right_matrix = np.array([[1, 0, 0, 5],
+                                      [0, 1, 0, 0],
+                                      [0, 0, 1, 0], 
+                                      [0, 0, 0, 1]])
+
+        self.z_rot_matrix = np.array([[cos(f), -sin(f), 0, 0],
+                                      [sin(f),  cos(f), 0, 0],
+                                      [0,            0, 1, 0], 
+                                      [0,            0, 0, 1]])
+        
+        self.y_rot_matrix = np.array([[ cos(f), 0, sin(f), 0],
+                                      [      0, 1,      0, 0],
+                                      [-sin(f), 0, cos(f), 0], 
+                                      [      0, 0,      0, 1]])
+        
+        self.x_rot_matrix = np.array([[1,      0,       0, 0],
+                                      [0, cos(f), -sin(f), 0],
+                                      [0, sin(f),  cos(f), 0],
+                                      [0,      0,       0, 1]])
+        
+
+        self.m_z_rot_matrix = np.array([[cos(-f), -sin(-f), 0, 0],
+                                        [sin(-f),  cos(-f), 0, 0],
+                                        [0,            0,   1, 0], 
+                                        [0,            0,   0, 1]])
+        
+        self.m_y_rot_matrix = np.array([[ cos(-f), 0, sin(-f), 0],
+                                        [      0,  1,       0, 0],
+                                        [-sin(-f), 0, cos(-f), 0], 
+                                        [      0,  0,       0, 1]])
+        
+        self.m_x_rot_matrix = np.array([[1,       0,        0, 0],
+                                        [0, cos(-f), -sin(-f), 0],
+                                        [0, sin(-f),  cos(-f), 0],
+                                        [0,       0,        0, 1]])
+        
+        self.xyz_rot_matrix = self.x_rot_matrix@self.y_rot_matrix@self.z_rot_matrix
+        
 
     def position(self, event):
         pass
@@ -112,11 +181,83 @@ class EditBinds(Binds):
     def approve(self, event):
         pass
 
-    def up(self, event):
-        f = 1/2/pi
-        matrix = np.array([[cos(f), -sin(f), 0],
-                           [sin(f), cos(f),  0],
-                           [0,      0,       1]])
-        for s_index, shape in enumerate(self.canvas.shapes):
-            for p_index, point in enumerate(shape.points):
-                print(self.canvas.gettags(point))
+    def rot_xyz(self, event):
+        print()
+        mult_time = 0
+        set_time = 0
+        ass_time = 0
+        start = time()
+        for shape in self.canvas.shapes:
+            for point in shape.points:
+
+                mult_time_start = time()
+                point.vec = np.dot(self.xyz_rot_matrix, point.vec)
+                mult_time += time() - mult_time_start
+
+                ass_time_start = time()
+                x, y, z = point.vec[0]+425, point.vec[1]+350, point.vec[2]
+                point.set_vec(x, y, z)
+                ass_time += time()-ass_time_start
+
+                set_time_start = time()
+
+                # self.canvas.delete(point.get_id())
+                # x, y, color = point.get_draw()
+                # new_point = Point(x, y, 0, point.get_alpha())
+                # self.canvas.id+=1
+                # tag = "point" + str(self.canvas.id)
+                # index = self.canvas.create_line(x, y, x+1, y, fill=f'#{color}', tags=tag)
+                # new_point.set_id(index)
+                # new_point.set_tag(tag)
+                # self.canvas.points.append(new_point)
+                # point = new_point
+
+                self.canvas.moveto(point.get_id(), x, y)
+                set_time += time() - set_time_start
+        #print(time() - start, mult_time, set_time, ass_time)
+
+    def transform(self, event, transform):
+        for shape in self.canvas.shapes:
+            for point in shape.points:
+                match transform:
+                    case "rot_xyz":
+                        point.vec = np.dot(self.xyz_rot_matrix, point.vec)
+                    case "rot_up":
+                        point.vec = np.dot(self.x_rot_matrix, point.vec)
+                    case "rot_down":
+                        point.vec = np.dot(self.m_x_rot_matrix, point.vec)
+                    case "rot_right":
+                        point.vec = np.dot(self.m_y_rot_matrix, point.vec)
+                    case "rot_left":
+                        point.vec = np.dot(self.y_rot_matrix, point.vec)
+                    case "rot_turn_left":
+                        point.vec = np.dot(self.m_z_rot_matrix, point.vec)
+                    case "rot_turn_right":
+                        point.vec = np.dot(self.z_rot_matrix, point.vec)
+                    case "scale_up":
+                        point.vec = np.dot(self.scale_up_matrix, point.vec)
+                    case "scale_down":
+                        point.vec = np.dot(self.scale_down_matrix, point.vec)
+                    case "up":
+                        point.vec = np.dot(self.up_matrix, point.vec)
+                    case "down":
+                        point.vec = np.dot(self.down_matrix, point.vec)
+                    case "right":
+                        point.vec = np.dot(self.right_matrix, point.vec)
+                    case "left":
+                        point.vec = np.dot(self.left_matrix, point.vec)
+                x, y, z = point.vec[0]+425, point.vec[1]+350, point.vec[2]
+                point.set_vec(x, y, z)
+
+                # self.canvas.delete(point.get_id())
+                # x, y, color = point.get_draw()
+                # new_point = Point(x, y, 0, point.get_alpha())
+                # self.canvas.id+=1
+                # tag = "point" + str(self.canvas.id)
+                # index = self.canvas.create_line(x, y, x+1, y, fill=f'#{color}', tags=tag)
+                # new_point.set_id(index)
+                # new_point.set_tag(tag)
+                # self.canvas.points.append(new_point)
+                # point = new_point
+
+                self.canvas.moveto(point.get_id(), x, y)

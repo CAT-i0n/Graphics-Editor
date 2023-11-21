@@ -18,13 +18,12 @@ class Canvas(tk.Canvas):
         self.positions = []
         self.shapes = []
         self.shape_draw_mode = 'DDA'
-
+        self.points = []
         self.isDraw: bool = False
         self.draw_mode = None
         self.mode = CanvasModes.DRAW
         self.button_clicked = -1
         self.approve = False
-        self.move = 0
 
         self._shape_mods = {'DDA': DDA,
                             'Bresenham': BresenhamLine,
@@ -68,9 +67,24 @@ class Canvas(tk.Canvas):
             self.unbind('<Button-2>')
 
             self._binds = EditBinds(self)
-            print(1)
-            self.main_parent.bind('w', self._binds.up)
-            print(1)
+
+            # self.main_parent.bind('r', self._binds.rot_xyz)
+            self.main_parent.bind('r', lambda event: self._binds.transform(event, "rot_xyz"))
+
+            self.main_parent.bind('w', lambda event: self._binds.transform(event, "rot_up"))
+            self.main_parent.bind('s', lambda event: self._binds.transform(event, "rot_down"))
+            self.main_parent.bind('d', lambda event: self._binds.transform(event, "rot_right"))
+            self.main_parent.bind('a', lambda event: self._binds.transform(event, "rot_left"))
+            self.main_parent.bind('q', lambda event: self._binds.transform(event, "rot_turn_left"))
+            self.main_parent.bind('e', lambda event: self._binds.transform(event, "rot_turn_right"))
+
+            self.main_parent.bind('=', lambda event: self._binds.transform(event, "scale_up"))
+            self.main_parent.bind('-', lambda event: self._binds.transform(event, "scale_down"))
+
+            self.main_parent.bind('<Left>', lambda event: self._binds.transform(event, "left"))
+            self.main_parent.bind('<Right>', lambda event: self._binds.transform(event, "right"))
+            self.main_parent.bind('<Up>', lambda event: self._binds.transform(event, "up"))
+            self.main_parent.bind('<Down>', lambda event: self._binds.transform(event, "down"))
 
 
     def add_button(self, event):
@@ -100,9 +114,8 @@ class Canvas(tk.Canvas):
         self.shapes.append(shape)
 
     def __draw_point(self, point):
-        x, y, alpha = point.get_draw()
+        x, y, color = point.get_draw()
         self.id+=1
-        color = hex(int(255*(alpha)))[2:]*3
         tag = "point" + str(self.id)
         index = self.create_line(x, y, x+1, y, fill=f'#{color}', tags=tag)
         point.set_id(index)
@@ -119,5 +132,7 @@ class Canvas(tk.Canvas):
         for i in self.shapes:
             for j in i.points:
                 self.delete(j.get_id())
+        for i in self.points:
+            self.delete(i.get_id())
         self.shapes = []
         self.isDraw: bool = False
