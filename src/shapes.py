@@ -4,6 +4,7 @@ import numpy as np
 from itertools import cycle
 from .point import Point
 
+INTERPOLATION_CURVES_POINT_NUM = 500
 class Shape(ABC):
 
     @abstractmethod
@@ -220,26 +221,50 @@ class Parabola(Shape):
 class DDA():
     def __init__(self, *args):
         self.points = args
+        
 
     def draw(self):
-        x1, y1, x2, y2 = self.points
-        if x1-x2 == 0 and y1-y2 == 0:
-            return [Point(x1, y1)]
-        points = []
+        if len(self.points) == 4:
+            x1, y1, x2, y2 = self.points
+            if x1-x2 == 0 and y1-y2 == 0:
+                return [Point(x1, y1)]
+            points = []
 
-        length = max(abs(x1-x2), abs(y1-y2))
-        dx = (x2-x1)/length
-        dy = (y2-y1)/length
-        x = x1
-        y = y1
-        i = 0
-        while i < length:
-            x += dx
-            y += dy
-            points.append(Point(x, y))
-            i += 1
-        return points
+            length = max(abs(x1-x2), abs(y1-y2))
+            dx = (x2-x1)/length
+            dy = (y2-y1)/length
+            x = x1
+            y = y1
+            i = 0
+            while i < length:
+                x += dx
+                y += dy
+                points.append(Point(x, y))
+                i += 1
+            return points
+        elif len(self.points) == 6:
+            x1, y1, z1, x2, y2, z2 = self.points
+            x1 += 425
+            x2 += 425
+            y1 += 350
+            y2 += 350
+            points = []
 
+            length = max(abs(x1-x2), abs(y1-y2), abs(z1-z2))
+            dx = (x2-x1)/length
+            dy = (y2-y1)/length
+            dz = (z2-z1)/length
+            x = x1
+            y = y1
+            z = z1
+            i = 0
+            while i < length:
+                x += dx
+                y += dy
+                z += dz
+                points.append(Point(x, y, z))
+                i += 1
+            return points
 
 class BresenhamLine():
     def __init__(self, *args):
@@ -357,7 +382,7 @@ class Hermite(Shape, Interpolation):
 
         points = []
 
-        for i in np.arange(0, 1, 0.001):
+        for i in np.arange(0, 1, 1/INTERPOLATION_CURVES_POINT_NUM):
             x = 0
             y = 0
             for j in range(4):
@@ -399,7 +424,7 @@ class Bеzier(Shape, Interpolation):
 
         points = []
 
-        for i in np.arange(0, 1, 0.001):
+        for i in np.arange(0, 1, 1/INTERPOLATION_CURVES_POINT_NUM):
             x = 0
             y = 0
             for j in range(4):
@@ -443,7 +468,7 @@ class ClosedSplain(Shape, Interpolation):
                   -3*p1[1]+3*p3[1],
                   p1[1]+4*p2[1]+p3[1]]
 
-            for i in np.arange(0, 1, 0.001):
+            for i in np.arange(0, 1, 1/INTERPOLATION_CURVES_POINT_NUM):
                 x = 0
                 y = 0
                 for j in range(4):
@@ -487,7 +512,7 @@ class Splain(Shape, Interpolation):
                   -3*p1[1]+3*p3[1],
                   p1[1]+4*p2[1]+p3[1]]
 
-            for i in np.arange(0, 1, 0.001):
+            for i in np.arange(0, 1, 1/INTERPOLATION_CURVES_POINT_NUM):
                 x = 0
                 y = 0
                 for j in range(4):

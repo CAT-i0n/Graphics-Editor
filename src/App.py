@@ -1,5 +1,5 @@
 import tkinter as tk
-import numpy as np
+from tkinter import filedialog
 from itertools import cycle
 
 from .canvas import Canvas
@@ -43,6 +43,10 @@ class App(tk.Tk):
             master=tools_frame, text="Curve aproximation:\nHermite", height=2, width=12, command=self.__change_curve_aproximation_mode)
         self._curve_aproximation_button.place(x=15, y=120)
 
+        self._file_shape = tk.Button(
+            master=tools_frame, text="select\nfile", height=2, width=12, command=lambda: self.__load_shape_from_file(filedialog.askopenfilename()))
+        self._file_shape.place(x=15, y=450)
+
         self._mode_button = tk.Button(
             master=tools_frame, text="mode:\ndefault", height=2, width=12, command=self.__change_mode)
         self._mode_button.place(x=15, y=500)
@@ -53,6 +57,12 @@ class App(tk.Tk):
 
         label = tk.Label(master=tools_frame, text='Рудьман Иван\n021701')
         label.place(x=30, y=650)
+
+    def __load_shape_from_file(self, path):
+        shape = open(path).read()
+        edges = shape.split('\n')[:-1]
+        point_edges = list(map(lambda x: list(map(int, x[1:-1].split(','))), edges))
+        self._canvas.draw_lines(point_edges)
 
     def __change_line_draw_mode(self):
         self._canvas.shape_draw_mode = next(self.line_mods)

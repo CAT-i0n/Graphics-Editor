@@ -40,6 +40,24 @@ class Canvas(tk.Canvas):
         self._binds = None 
         self.change_draw_mode()
 
+        # self.draw_figure(100, 100, 100, 100, 100, -100)
+        # self.draw_figure(100, 100, 100, 100, -100, 100)
+        # self.draw_figure(100, 100, 100, -100, 100, 100)
+
+        # self.draw_figure(-100, -100, 100, -100, 100, 100)
+        # self.draw_figure(-100, -100, 100, 100, -100, 100)
+        # self.draw_figure(-100, -100, 100, -100, -100, -100)
+
+        # self.draw_figure(100, -100, -100, -100, -100, -100)
+        # self.draw_figure(100, -100, -100, 100, -100, 100)
+        # self.draw_figure(100, -100, -100, 100, 100, -100)
+
+        # self.draw_figure(-100, 100, -100, -100, -100, -100)
+        # self.draw_figure(-100, 100, -100, 100, 100, -100)
+        # self.draw_figure(-100, 100, -100, -100, 100, 100)
+
+        
+
     def change_draw_mode(self):
         if self.mode == CanvasModes.EDIT:
             return
@@ -85,6 +103,9 @@ class Canvas(tk.Canvas):
             self.main_parent.bind('<Right>', lambda event: self._binds.transform(event, "right"))
             self.main_parent.bind('<Up>', lambda event: self._binds.transform(event, "up"))
             self.main_parent.bind('<Down>', lambda event: self._binds.transform(event, "down"))
+
+            self.main_parent.bind('p', lambda event: self._binds.transform(event, "perspective"))
+            self.main_parent.bind('j', lambda event: self._binds.transform(event, "project"))
 
 
     def add_button(self, event):
@@ -136,3 +157,9 @@ class Canvas(tk.Canvas):
             self.delete(i.get_id())
         self.shapes = []
         self.isDraw: bool = False
+    
+    def draw_lines(self, lines):
+        if self.shape_draw_mode == 'DDA':
+            for i in lines:
+                self.draw_figure(*i)
+            
