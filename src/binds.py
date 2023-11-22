@@ -169,52 +169,19 @@ class EditBinds(Binds):
                                         [0, sin(-f),  cos(-f), 0],
                                         [0,       0,        0, 1]])
         
+        self.perspective_matrix = np.array([[1, 0, 0, 0],
+                                            [0, 1, 0, 0],
+                                            [0, 0, 1, 0], 
+                                            [0, 0, -0.001, 1]])
+        
+        self.project_matrix = np.array([[1, 0, 0, 0],
+                                            [0, 1, 0, 0],
+                                            [0, 0, 0, 0], 
+                                            [0, 0, 0, 1]])
+        
         self.xyz_rot_matrix = self.x_rot_matrix@self.y_rot_matrix@self.z_rot_matrix
         
 
-    def position(self, event):
-        pass
-
-    def motion(self, event):
-        pass
-
-    def approve(self, event):
-        pass
-
-    def rot_xyz(self, event):
-        print()
-        mult_time = 0
-        set_time = 0
-        ass_time = 0
-        start = time()
-        for shape in self.canvas.shapes:
-            for point in shape.points:
-
-                mult_time_start = time()
-                point.vec = np.dot(self.xyz_rot_matrix, point.vec)
-                mult_time += time() - mult_time_start
-
-                ass_time_start = time()
-                x, y, z = point.vec[0]+425, point.vec[1]+350, point.vec[2]
-                point.set_vec(x, y, z)
-                ass_time += time()-ass_time_start
-
-                set_time_start = time()
-
-                # self.canvas.delete(point.get_id())
-                # x, y, color = point.get_draw()
-                # new_point = Point(x, y, 0, point.get_alpha())
-                # self.canvas.id+=1
-                # tag = "point" + str(self.canvas.id)
-                # index = self.canvas.create_line(x, y, x+1, y, fill=f'#{color}', tags=tag)
-                # new_point.set_id(index)
-                # new_point.set_tag(tag)
-                # self.canvas.points.append(new_point)
-                # point = new_point
-
-                self.canvas.moveto(point.get_id(), x, y)
-                set_time += time() - set_time_start
-        #print(time() - start, mult_time, set_time, ass_time)
 
     def transform(self, event, transform):
         for shape in self.canvas.shapes:
@@ -246,18 +213,24 @@ class EditBinds(Binds):
                         point.vec = np.dot(self.right_matrix, point.vec)
                     case "left":
                         point.vec = np.dot(self.left_matrix, point.vec)
-                x, y, z = point.vec[0]+425, point.vec[1]+350, point.vec[2]
-                point.set_vec(x, y, z)
+                    case "perspective":
+                        point.vec = np.dot(self.perspective_matrix, point.vec)
+                    case "project":
+                        point.vec = np.dot(self.project_matrix, point.vec)
+                
+                if point.vec[3]!=1:
+                    point.vec /= point.vec[3]
+                x, y = point.vec[0]+425, point.vec[1]+350
 
-                # self.canvas.delete(point.get_id())
-                # x, y, color = point.get_draw()
-                # new_point = Point(x, y, 0, point.get_alpha())
-                # self.canvas.id+=1
-                # tag = "point" + str(self.canvas.id)
-                # index = self.canvas.create_line(x, y, x+1, y, fill=f'#{color}', tags=tag)
-                # new_point.set_id(index)
-                # new_point.set_tag(tag)
-                # self.canvas.points.append(new_point)
-                # point = new_point
+                self.canvas.delete(point.get_id())
+                x, y, color = point.get_draw()
+                new_point = Point(x, y, 0, point.get_alpha())
+                self.canvas.id+=1
+                tag = "point" + str(self.canvas.id)
+                index = self.canvas.create_line(x, y, x+1, y, fill=f'#{color}', tags=tag)
+                new_point.set_id(index)
+                new_point.set_tag(tag)
+                self.canvas.points.append(new_point)
+                point = new_point
 
                 self.canvas.moveto(point.get_id(), x, y)
