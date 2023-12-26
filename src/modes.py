@@ -1,7 +1,8 @@
 from enum import Enum
 
 class CanvasModes(Enum):
-    DEBUG = 'debug'
+    POLY = 'poly'
     DRAW = 'draw'
     EDIT = 'edit'
+    FILL = 'fill'
 

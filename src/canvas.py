@@ -3,10 +3,11 @@ from time import sleep
 from .point import Point
 from .shapes import (DDA, BresenhamLine, WuLine,
                      Circle, Ellipse, Hyperbola, Parabola,
-                     Hermite, Bеzier, Splain, ClosedSplain, Interpolation)
+                     Hermite, Bеzier, Splain, ClosedSplain, Interpolation,
+                     DefaultPoly, Graham, Jarvis, Delone)
 
 from .modes import CanvasModes
-from .binds import TwoAnchorBinds, InterpolationBinds, EditBinds
+from .binds import TwoAnchorBinds, InterpolationBinds, EditBinds, PolyBinds, FillBinds
 
 
 class Canvas(tk.Canvas):
@@ -35,55 +36,29 @@ class Canvas(tk.Canvas):
                             'Hermite': Hermite,
                             'Bеzier': Bеzier,
                             'Splain': Splain,
-                            'Closed splain': ClosedSplain}
+                            'Closed splain': ClosedSplain, 
+                            'Default' : DefaultPoly, 
+                            'Graham' : Graham,
+                            'Jarvis': Jarvis,
+                            'Delone' : Delone}
         
         self._binds = None 
-        self.change_draw_mode()
-
-        # self.draw_figure(100, 100, 100, 100, 100, -100)
-        # self.draw_figure(100, 100, 100, 100, -100, 100)
-        # self.draw_figure(100, 100, 100, -100, 100, 100)
-
-        # self.draw_figure(-100, -100, 100, -100, 100, 100)
-        # self.draw_figure(-100, -100, 100, 100, -100, 100)
-        # self.draw_figure(-100, -100, 100, -100, -100, -100)
-
-        # self.draw_figure(100, -100, -100, -100, -100, -100)
-        # self.draw_figure(100, -100, -100, 100, -100, 100)
-        # self.draw_figure(100, -100, -100, 100, 100, -100)
-
-        # self.draw_figure(-100, 100, -100, -100, -100, -100)
-        # self.draw_figure(-100, 100, -100, 100, 100, -100)
-        # self.draw_figure(-100, 100, -100, -100, 100, 100)
-
+        self.is_debug = None
+        self.poly_mode = tk.StringVar()
+        self.poly_check = tk.StringVar()
+        self.color_var = tk.StringVar()
+        # self.create_line(200,200,650,200, fill = "white")
+        # self.create_line(200,500,650,500, fill = "white")
+        # self.create_line(200,200,200,500, fill = "white")
+        # self.create_line(650,200,650,500, fill = "white")
         
+        self.change_draw_mode()        
 
     def change_draw_mode(self):
-        if self.mode == CanvasModes.EDIT:
-            return
         self.unbind('<Button-1>')
         self.unbind('<Motion>')
         self.unbind('<Button-2>')
-        if issubclass(self._shape_mods[self.shape_draw_mode], Interpolation):
-            self._binds = InterpolationBinds(self)
-        else:
-            self._binds = TwoAnchorBinds(self)
-
-        self.bind('<Button-1>', self._binds.position)
-        self.bind('<Motion>', self._binds.motion)
-        self.bind('<Button-3>', self._binds.approve)
-
-        self.positions = []
-        for i in self.buttons:
-            self.delete(i)
-        self.buttons = []
-
-    def change_mode(self):
         if self.mode == CanvasModes.EDIT:
-            self.unbind('<Button-1>')
-            self.unbind('<Motion>')
-            self.unbind('<Button-2>')
-
             self._binds = EditBinds(self)
 
             # self.main_parent.bind('r', self._binds.rot_xyz)
@@ -106,8 +81,39 @@ class Canvas(tk.Canvas):
 
             self.main_parent.bind('p', lambda event: self._binds.transform(event, "perspective"))
             self.main_parent.bind('j', lambda event: self._binds.transform(event, "project"))
+            return
+        elif self.mode == CanvasModes.DRAW:
+            if issubclass(self._shape_mods[self.shape_draw_mode], Interpolation):
+                self._binds = InterpolationBinds(self)
+            else:
+                self._binds = TwoAnchorBinds(self)
 
+            self.bind('<Button-1>', self._binds.position)
+            self.bind('<Motion>', self._binds.motion)
+            self.bind('<Button-3>', self._binds.approve)
 
+            
+        
+        elif self.mode == CanvasModes.POLY:
+            self._binds = PolyBinds(self)
+
+            self.bind('<Button-1>', self._binds.position)
+            self.bind('<Motion>', self._binds.motion)
+            self.bind('<Button-3>', self._binds.approve)
+
+        elif self.mode == CanvasModes.FILL:
+            self._binds = FillBinds(self)
+
+            self.bind('<Button-1>', self._binds.position)
+            self.bind('<Motion>', self._binds.motion)
+            self.bind('<Button-3>', self._binds.approve)
+
+        self.positions = []
+        for i in self.buttons:
+            self.delete(i)
+        self.buttons = []
+            
+            
     def add_button(self, event):
         x, y = event.x, event.y
         self.positions.append((x, y))
@@ -126,13 +132,52 @@ class Canvas(tk.Canvas):
         points = []
         shape = self._shape_mods[self.shape_draw_mode](*args)
         for i in shape.draw():
-            if self.mode == CanvasModes.DEBUG:
+            if self.is_debug.get():
                 sleep(0.005)
                 self.update()
             point = self.__draw_point(i)
             points.append(point)
         shape.points = points
         self.shapes.append(shape)
+
+    def draw_poly(self, *args):
+        shape = self._shape_mods[self.poly_mode.get()](*args)
+        #self.check_poly(*args)
+
+        for i in shape.draw():
+            if self.is_debug.get():
+                sleep(0.005)
+                self.update()
+            
+            print(i)
+            line = DDA(*i[0], *i[1]).draw()
+            for point in line:
+                shape.canvas_points.append(self.__draw_point(point))
+            
+        self.shapes.append(shape)
+
+        # if self.poly_mode.get() == 'Graham' and self.poly_mode.get() == 'Jarvis':
+        #     self.poly_check.set('Полигон\nвыпуклый')
+
+    def check_poly(self, *args):
+        vecs = []
+        vecs.append((args[0][0]-args[-1][0], args[0][1]-args[-1][1]))
+        for i, p in enumerate(args[:-1]):
+            vecs.append((args[i+1][0]-p[0], args[i+1][1]-p[1]))
+
+        s = []
+        for i, v in enumerate(vecs[:-1]):
+            if v[0]*vecs[i+1][1] - v[1]*vecs[i+1][0]>0:
+                s.append(1)
+            if v[0]*vecs[i+1][1] - v[1]*vecs[i+1][0]<0:
+                s.append(-1)
+        if len(set(s))==1:
+            self.poly_check.set('Полигон\nвыпуклый')
+        else:
+            self.poly_check.set('Полигон\nвогнутый')
+
+    def draw_point(self, point):
+        return self.__draw_point(point)
 
     def __draw_point(self, point):
         x, y, color = point.get_draw()
@@ -163,3 +208,7 @@ class Canvas(tk.Canvas):
             for i in lines:
                 self.draw_figure(*i)
             
+    def draw_poly_fig(self, lines):
+        for line in lines:
+            self.draw_poly(line[:3], line[3:6], line[6:9], line[9:])
+        #self.draw_lines(lines)
