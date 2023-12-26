@@ -3,6 +3,10 @@ from math import inf
 import numpy as np
 from itertools import cycle
 from .point import Point
+from math import atan
+import math
+import numpy
+from scipy.spatial import Delaunay
 
 INTERPOLATION_CURVES_POINT_NUM = 500
 class Shape(ABC):
@@ -236,7 +240,7 @@ class DDA():
             x = x1
             y = y1
             i = 0
-            while i < length:
+            while i < length+1:
                 x += dx
                 y += dy
                 points.append(Point(x, y))
@@ -522,3 +526,124 @@ class Splain(Shape, Interpolation):
                 points.append(Point(x, y))
 
         return points
+
+class Poly:
+    ...
+
+class DefaultPoly(Shape, Poly):
+    def __init__(self, *args):
+        self.points = args
+        self.lines = []
+        self.canvas_points = []
+
+    def draw(self, *args):
+        for i, point in enumerate(self.points[:-1]):
+            self.lines += [(point, self.points[i+1])]
+
+        self.lines += [(self.points[-1], self.points[0])]
+        
+        if len(self.points[0])==2:
+            self.points = [Point(i[0], i[1]) for i in self.points]
+        else:
+            self.points = [Point(i[0]+425, i[1]+350, i[2]) for i in self.points]
+        return self.lines
+    
+
+
+
+class Graham(Shape, Poly):
+    def __init__(self, *args):
+        self.points = args
+
+    def draw(self, *args):
+        points = []
+        poly_points = []
+
+        self.points = sorted(self.points, key = lambda x:[x[0],x[1]])
+        start = self.points[0]
+        poly_points.append(start)
+        pol_angle = lambda y: (y[1]-start[1])/(y[0]-start[0]) if start[0]!=y[0] else 10000
+
+        poss = sorted(self.points[1:], key = pol_angle)
+        poly_points.append(poss[0])
+
+        for i in poss[1:]:
+            # u = (poly_points[-1][0] - i[0], poly_points[-1][1] - i[1])
+            # v = (poly_points[-2][0] - i[0], poly_points[-2][1] - i[1])
+            u = (poly_points[-1][0] - poly_points[-2][0], poly_points[-1][1] - poly_points[-2][1])
+            v = (i[0] - poly_points[-1][0], i[1] - poly_points[-1][1])
+            e = u[0]*v[1] - v[0]*u[1]
+            if e>=0:
+                poly_points.append(i)
+            elif len(poly_points)>2:
+                poly_points = poly_points[:-1]
+
+
+        for i, point in enumerate(poly_points[:-1]):
+            points += DDA(*point, *poly_points[i+1]).draw() 
+        points += DDA(*poly_points[-1], *poly_points[0]).draw() 
+
+        return points
+        
+
+class Jarvis(Shape, Poly):
+    def __init__(self, *args):
+        self.points = args
+
+    def draw(self, *args):
+        points = []
+
+        def ConvexHull(pts):
+            convex_hull=[] # Result array which gets appended over loops
+            start_pt=pts[0] # This array will (ultimately) store the value of bottom-right-most point in X-Y plane. This is where we start gift wrapping from.
+            start_id=0 # Just for swapping purpose
+            for x in range(1,len(pts)): # Loop to find out the bottom-right-most point.
+                if(pts[x][1]<start_pt[1]):
+                    start_pt=pts[x]
+                    start_id=x
+                elif (pts[x][1]==start_pt[1] and pts[x][0]>start_pt[0]):
+                    start_pt=pts[x]
+                    start_id=x
+            convex_hull.append(start_pt) # First element of convex hull
+            pts[0],pts[start_id]=pts[start_id],pts[0] # Modifying the input array so that our first element goes to the 0th array position. Done by swapping.
+            current_pt=start_pt # To store the last found point on convex hull. Necessary for calculating angles.
+            last_angle=math.pi # To store angle made by last 2 points on convex hull. Used for checking a condition which says that no new point on the hull paired with the last found point can make an angle larger than the 2nd last found point paired with the last point.
+            while(pts[0]==start_pt): # Main loop. Continues as long as a closed loop is not formed.
+                max_angle=-(math.pi) # Starting from -180 degree. This comes from the fact that we started with the bottom-right-most point.
+                for i in range(len(pts)):
+                    angle=math.atan2((pts[i][1]-current_pt[1]),(pts[i][0]-current_pt[0]))
+                    if(angle>=max_angle and angle<last_angle):
+                        max_angle=angle
+                        temp_pt=pts[i]
+                if(temp_pt!=current_pt):
+                    convex_hull.append(temp_pt)
+                    current_pt=temp_pt
+                    pts.remove(temp_pt)
+                    last_angle=max_angle
+                elif(temp_pt==start_pt):
+                    break
+            del convex_hull[-1] # To remove last element in result array which is the same as the first element.
+            return convex_hull
+        rez = ConvexHull(list(self.points))
+
+        for i, point in enumerate(rez[:-1]):
+            points += DDA(*point, *rez[i+1]).draw() 
+        points += DDA(*rez[-1], *rez[0]).draw() 
+
+
+        return points
+        
+
+class Delone(Shape, Poly):
+    def __init__(self, *args):
+        self.points = args
+
+    def draw(self, *args):
+        points = []
+        tringles = Delaunay(self.points).simplices
+        for i in tringles:
+            points+=DDA(*self.points[i[0]], *self.points[i[1]]).draw() 
+            points+=DDA(*self.points[i[1]], *self.points[i[2]]).draw() 
+            points+=DDA(*self.points[i[2]], *self.points[i[0]]).draw()
+
+        return points 
