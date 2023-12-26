@@ -16,6 +16,9 @@ class Point:
     def get_draw(self):
         return self._x, self._y, self._color
     
+    def get_poly(self):
+        return (self._x-425, self._y-350, self._z)
+    
     def get_id(self):
         return self._id
     
